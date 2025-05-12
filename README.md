@@ -1,2 +1,1 @@
-# scanner
-scanner
+# Scanner proxy cloudflare
