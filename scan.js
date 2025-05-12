@@ -2,8 +2,8 @@ const axios = require('axios');
 const fs = require('fs');
 const inputFile = 'proxies.csv';
 const active = [], dead = [];
-const batchSize = 100;  // Mengatur ukuran batch
-const delayTime = 180000; // Delay waktu 3 menit (180000 ms)
+const timeoutAfter = 1500;  // Setelah memindai 1500 proxy, beri timeout
+const timeoutDuration = 120000; // Timeout selama 2 menit (120000 ms)
 
 async function checkProxy(proxy, port, cc, isp) {
   try {
@@ -42,23 +42,28 @@ async function processBatch(batch) {
 (async () => {
   const lines = fs.readFileSync(inputFile, 'utf-8').split('\n').filter(x => x.trim());
   let batch = [];
-  
+  let processed = 0; // Untuk menghitung jumlah proxy yang telah diproses
+
   for (let i = 0; i < lines.length; i++) {
     batch.push(lines[i]);
+    processed++;
 
-    // Jika batch sudah cukup besar, proses dan tunggu sebelum lanjut ke batch berikutnya
-    if (batch.length === batchSize || i === lines.length - 1) {
-      console.log(`Memproses batch ${Math.floor(i / batchSize) + 1}...`);
+    // Proses batch setelah ukuran batch tercapai
+    if (batch.length === 100 || i === lines.length - 1) {
+      console.log(`Memproses batch ${Math.floor(i / 100) + 1}...`);
       await processBatch(batch);
       batch = [];  // Reset batch
-      if (i !== lines.length - 1) {
-        console.log(`Menunggu 3 menit sebelum melanjutkan...`);
-        await delay(delayTime);  // Tunggu 3 menit
+
+      // Jika sudah memproses 1500 proxy, beri waktu delay 2 menit
+      if (processed >= timeoutAfter) {
+        console.log(`Sudah memproses ${processed} proxy, menunggu selama 2 menit...`);
+        await delay(timeoutDuration);  // Timeout 2 menit
+        processed = 0; // Reset jumlah proxy yang telah diproses
       }
     }
   }
 
-  // Tulis hasil akhir
+  // Tulis hasil akhir ke file
   fs.writeFileSync('active.txt', active.join('\n'));
   fs.writeFileSync('dead.txt', dead.join('\n'));
 })();
