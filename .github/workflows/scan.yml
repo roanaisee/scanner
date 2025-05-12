@@ -1,0 +1,33 @@
+name: Proxy Scanner
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: npm install axios
+
+    - name: Jalankan scanner
+      run: node scan.js
+
+    - name: Upload hasil active.txt & dead.txt
+      uses: actions/upload-artifact@v4
+      with:
+        name: hasil-proxy
+        path: |
+          active.txt
+          dead.txt
