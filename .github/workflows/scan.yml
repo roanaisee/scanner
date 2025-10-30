@@ -1,5 +1,4 @@
 name: Proxy Scanner
-
 on:
   push:
     branches: [ main ]
